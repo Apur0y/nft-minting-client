@@ -1,8 +1,19 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 
 const Gallery = () => {
+
+    const [token,setToken] = useState([])
+console.log(token);
+    useEffect(()=>{
+            
+        axios.get("http://localhost:5000/alldata")
+        .then(res=>setToken(res.data))
+    },[])
     return (
         <div>
+            <h1>View Your Gallery</h1>
             <div className="card bg-base-100 w-96 shadow-sm">
   <figure>
     <img
