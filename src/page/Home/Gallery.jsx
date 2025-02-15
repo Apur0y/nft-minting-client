@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import axios from "axios";
 
-// const API_URL = "http://localhost:5000/alldata"; // Adjust according to your backend URL
+// const API_URL = "https://nft-minting-server.vercel.app/alldata"; // Adjust according to your backend URL
 const DEFAULT_IMAGE = "https://placehold.co/300x300?text=No+Image"; // Default image placeholder
 
 const NFTGallery = () => {
@@ -19,7 +19,7 @@ const NFTGallery = () => {
       }
 
       try {
-        axios.get("http://localhost:5000/alldata")
+        axios.get("https://nft-minting-server.vercel.app/alldata")
         .then(response => {
           const filteredNFTs = response.data.filter(nft => nft.owner === address);
           setNfts(filteredNFTs || []);

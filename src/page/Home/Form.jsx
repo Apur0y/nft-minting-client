@@ -228,7 +228,7 @@ const contractConfig = {
   ],
 };
 
-const API_URL = "http://localhost:5000"; // Adjust according to your backend URL
+const API_URL = "https://nft-minting-server.vercel.app"; // Adjust according to your backend URL
 
 const Form = () => {
   const [formData, setFormData] = useState({
@@ -372,7 +372,7 @@ const Form = () => {
 
       // Step 4: Store metadata in backend
       try {
-        await axios.post(`http://localhost:5000/alldata`, metadata)
+        await axios.post(`https://nft-minting-server.vercel.app/alldata`, metadata)
          .then(()=>{
           
          })
