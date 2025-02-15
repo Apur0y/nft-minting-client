@@ -1,9 +1,19 @@
 // import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RiBox2Line } from "react-icons/ri";
-import { useConnect, useAccount, useWriteContract,useNetwork,useSwitchNetwork } from "wagmi";
+import {
+  useConnect,
+  useAccount,
+  useWriteContract,
+  useChainId,
+  useSwitchChain,
+  useReadContract,
+} from "wagmi";
 import { injected } from "wagmi";
 import { sepolia } from "viem/chains";
+import { toast, ToastContainer } from "react-toastify";
+import { contractConfig } from "../../component/contractConfig";
+import axios from "axios";
 
 const Form = () => {
   const [formData, setFormData] = useState({
@@ -15,8 +25,60 @@ const Form = () => {
   const { connectAsync } = useConnect();
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
-  const {chain} = useNetwork()
-  const {switchNetwork} = useSwitchNetwork()
+  const { chainId } = useChainId();
+  const { switchChain } = useSwitchChain();
+
+  const [tokenId, setTokenId] = useState(null);
+  const [isChecking, setIsChecking] = useState(true); // Track loading state
+  const metadata = {
+    tokenId,
+    name: formData.name,
+    description: formData.description, // Add this
+    image: formData.image,
+  };
+  
+
+  // Generate random ID
+  const generateRandomId = () => Math.floor(Math.random() * 1000000);
+
+  // Check if the token ID exists
+  const { data: exists, refetch } = useReadContract({
+    ...contractConfig,
+    functionName: "checkId",
+    args: [tokenId], // Pass the current tokenId
+    enabled: !!tokenId, // Only run if tokenId is set
+  });
+
+  useEffect(() => {
+    if (isChecking) {
+      const newId = generateRandomId();
+      setTokenId(newId);
+    }
+  }, [isChecking]); // Runs when checking starts
+
+  useEffect(() => {
+    if (tokenId !== null && exists !== undefined) {
+      if (exists) {
+        // ID exists, generate a new one
+        setTokenId(generateRandomId());
+        refetch(); // Re-check the new ID
+      } else {
+        // Unique ID found
+        setIsChecking(false);
+      }
+    }
+  }, [tokenId, exists]);
+ 
+
+  const switchNetwork = async () => {
+    try {
+      await switchChain({ chainId: sepolia.id });
+      toast("Switched to Sepolia Network!");
+    } catch (error) {
+      console.error("Network switch failed:", error);
+      alert("Failed to switch network. Please switch manually.");
+    }
+  };
 
   // Handle input changes
   const handleChange = (e) => {
@@ -26,33 +88,252 @@ const Form = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (chain?.id !== sepolia.id) {
-        if (switchNetwork) {
-          switchNetwork(sepolia.id);
-          return;
-        } else {
-          alert("Please switch to the Sepolia network manually.");
-          return;
-        }
+    if (chainId !== sepolia.id) {
+      if (switchNetwork) {
+        switchNetwork();
+     
+      } else {
+        toast("Please switch to the Sepolia network manually.");
+      
       }
+    }
     if (!address) {
       await connectAsync({ chainId: sepolia.id, connector: injected() });
     }
-
+    const metadataUrl = `http://localhost:5000/alldata/${tokenId}`;
     const data = await writeContractAsync({
-        chainId: sepolia.id,
-        address: "0x743f49311a82fe72eb474c44e78da2a6e0ae951c", // Contract Address
-        abi: [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"approved","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"bool","name":"approved","type":"bool"}],"name":"ApprovalForAll","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"checkId","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getApproved","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"operator","type":"address"}],"name":"isApprovedForAll","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"string","name":"metadataUrl","type":"string"}],"name":"mint","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"safeTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"safeTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setApprovalForAll","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"tokenURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"transferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"}],
-        functionName: "transferFrom", // Use a valid function
-        args: [address, "0x64498163f2b3E5AA871d335F4CBA6d5b5DcdD6BA", 1],
-         // sender, receiver, tokenId
-      });
-      
+      chainId: sepolia.id,
+      address: "0x743f49311a82fe72eb474c44e78da2a6e0ae951c", // Contract Address
+      abi: [
+        { inputs: [], stateMutability: "nonpayable", type: "constructor" },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "approved",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "tokenId",
+              type: "uint256",
+            },
+          ],
+          name: "Approval",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "operator",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "approved",
+              type: "bool",
+            },
+          ],
+          name: "ApprovalForAll",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "tokenId",
+              type: "uint256",
+            },
+          ],
+          name: "Transfer",
+          type: "event",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "approve",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "address", name: "owner", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "checkId",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "getApproved",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "owner", type: "address" },
+            { internalType: "address", name: "operator", type: "address" },
+          ],
+          name: "isApprovedForAll",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+            { internalType: "string", name: "metadataUrl", type: "string" },
+          ],
+          name: "mint",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "name",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "ownerOf",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "from", type: "address" },
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "safeTransferFrom",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "from", type: "address" },
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+            { internalType: "bytes", name: "data", type: "bytes" },
+          ],
+          name: "safeTransferFrom",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "operator", type: "address" },
+            { internalType: "bool", name: "approved", type: "bool" },
+          ],
+          name: "setApprovalForAll",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "bytes4", name: "interfaceId", type: "bytes4" },
+          ],
+          name: "supportsInterface",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "symbol",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "tokenURI",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "from", type: "address" },
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "transferFrom",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      functionName: "mint", // Use a valid function
+      args: [tokenId, metadataUrl],
+      // sender, receiver, tokenId
+    });
+    
 
-    // axios.post("http://localhost:5000/alldata",formData)
-    // .then(res=>console.log(res.data))
-console.log(data);
-    console.log("NFT Data:", formData);
+    axios
+      .post("http://localhost:5000/alldata", metadata)
+      .then((res) =>
+         console.log(res.data));
+    console.log(data);
+   
   };
 
   return (
@@ -105,6 +386,7 @@ console.log(data);
           </div>
         </div>
       </div>
+      <ToastContainer></ToastContainer>
     </div>
   );
 };
