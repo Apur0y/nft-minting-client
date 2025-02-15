@@ -5,7 +5,8 @@ import { RiBox2Line } from "react-icons/ri";
 
 const Navbar = () => {
     return (
-        <div className="navbar w-11/12 mx-auto bg-black">
+       <div>
+         <div className="navbar w-11/12 mx-auto bg-black ">
         <div className="navbar-start">
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -36,6 +37,7 @@ const Navbar = () => {
         </div>
          <div className="divider"></div>
       </div>
+       </div>
     );
 };
 

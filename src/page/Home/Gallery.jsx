@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000"; // Adjust according to your backend URL
+// const API_URL = "http://localhost:5000/alldata"; // Adjust according to your backend URL
 const DEFAULT_IMAGE = "https://placehold.co/300x300?text=No+Image"; // Default image placeholder
 
 const NFTGallery = () => {
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { address } = useAccount();
+
 
   useEffect(() => {
     const fetchNFTs = async () => {
@@ -18,8 +19,14 @@ const NFTGallery = () => {
       }
 
       try {
-        const response = await axios.get(`${API_URL}/gallery?owner=${address}`);
-        setNfts(response.data || []);
+        axios.get("http://localhost:5000/alldata")
+        .then(response => {
+          const filteredNFTs = response.data.filter(nft => nft.owner === address);
+          setNfts(filteredNFTs || []);
+          console.log(filteredNFTs); // Only NFTs that match the owner address
+        })
+        .catch(error => console.error("Error fetching NFTs:", error));
+        
       } catch (error) {
         console.error("Failed to fetch NFTs:", error);
       } finally {
