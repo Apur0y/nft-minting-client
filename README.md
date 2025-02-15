@@ -1,8 +1,8 @@
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Add the API routes : [
+   GET /POST/: /alldata,
+   GET: /alldata/:id
+]
+2. Add the deployed API link : https://nft-minting-server.vercel.app/
+3. Add the deployed frontend link : https://nft-app-f1162.web.app/ 
+4. Add the loom video link(s) : Sorry for the video.
+5. Add a link to the backend repository : https://github.com/Apur0y/nft-minting-server-site
