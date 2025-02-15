@@ -22,6 +22,7 @@ import {
   optimism,
   arbitrum,
   base,
+  sepolia,
 } from 'wagmi/chains';
 import {
   QueryClientProvider,
@@ -33,7 +34,7 @@ import {
 const config = getDefaultConfig({
   appName: 'NFT Web',
   projectId: '0f174d7887cbea9950679b65474af5f6',
-  chains: [mainnet, polygon, optimism, arbitrum, base],
+  chains: [mainnet, polygon, optimism, arbitrum, base,sepolia],
   ssr: true, // If your dApp uses server side rendering (SSR)
 });
 const queryClient = new QueryClient();

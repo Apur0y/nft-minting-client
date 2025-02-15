@@ -1,39 +1,101 @@
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
 import axios from "axios";
-import { useEffect, useState } from "react";
 
+const API_URL = "http://localhost:5000"; // Adjust according to your backend URL
+const DEFAULT_IMAGE = "https://placehold.co/300x300?text=No+Image"; // Default image placeholder
 
-const Gallery = () => {
+const NFTGallery = () => {
+  const [nfts, setNfts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { address } = useAccount();
 
-    const [token,setToken] = useState([])
-console.log(token);
-    useEffect(()=>{
-            
-        axios.get("http://localhost:5000/alldata")
-        .then(res=>setToken(res.data))
-    },[])
+  useEffect(() => {
+    const fetchNFTs = async () => {
+      if (!address) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_URL}/gallery?owner=${address}`);
+        setNfts(response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch NFTs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNFTs();
+  }, [address]);
+
+  const handleImageError = (e) => {
+    e.target.src = DEFAULT_IMAGE;
+  };
+
+  if (loading) {
     return (
-        <div>
-            <h1>View Your Gallery</h1>
-            <div className="card bg-base-100 w-96 shadow-sm">
-  <figure>
-    <img
-      src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-      alt="Shoes" />
-  </figure>
-  <div className="card-body">
-    <h2 className="card-title">
-      Card Title
-      <div className="badge badge-secondary">NEW</div>
-    </h2>
-    <p>A card component has a figure, a body part, and inside body there are title and actions parts</p>
-    <div className="card-actions justify-end">
-      <div className="badge badge-outline">Fashion</div>
-      <div className="badge badge-outline">Products</div>
-    </div>
-  </div>
-</div>
-        </div>
+      <div className="flex justify-center items-center h-40">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
     );
+  }
+
+  if (!address) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-lg">Please connect your wallet to see your NFT gallery</p>
+      </div>
+    );
+  }
+
+  if (nfts.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-lg">No NFTs found, please mint your first one using the widget above</p>
+      </div>
+    );
+  }
+
+  // Function to chunk array into groups of 3 for layout
+  const chunkArray = (arr, size) => {
+    return Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+      arr.slice(i * size, i * size + size)
+    );
+  };
+
+  const nftRows = chunkArray(nfts, 3);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="text-2xl font-bold mb-6">Your NFT Gallery</h2>
+      
+      {nftRows.map((row, rowIndex) => (
+        <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          {row.map((nft) => (
+            <div key={nft.tokenId} className="card bg-base-100 shadow-xl">
+              <figure className="px-6 pt-6">
+                <img
+                  src={nft.image || DEFAULT_IMAGE}
+                  alt={nft.name}
+                  className="rounded-xl object-cover h-48 w-full"
+                  onError={handleImageError}
+                />
+              </figure>
+              <div className="card-body">
+                <h2 className="card-title">{nft.name}</h2>
+                <p className="text-sm text-gray-600 line-clamp-3">{nft.description || "No description"}</p>
+                <div className="card-actions justify-end mt-2">
+                  <div className="badge badge-outline">#{nft.tokenId}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 };
 
-export default Gallery;
+export default NFTGallery;

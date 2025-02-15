@@ -1,4 +1,3 @@
-// import axios from "axios";
 import { useEffect, useState } from "react";
 import { RiBox2Line } from "react-icons/ri";
 import {
@@ -12,8 +11,223 @@ import {
 import { injected } from "wagmi";
 import { sepolia } from "viem/chains";
 import { toast, ToastContainer } from "react-toastify";
-import { contractConfig } from "../../component/contractConfig";
+import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+
+// Contract configuration
+const contractConfig = {
+  address: "0x743f49311a82fe72eb474c44e78da2a6e0ae951c",
+  abi: [
+    { inputs: [], stateMutability: "nonpayable", type: "constructor" },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: "address",
+          name: "owner",
+          type: "address",
+        },
+        {
+          indexed: true,
+          internalType: "address",
+          name: "approved",
+          type: "address",
+        },
+        {
+          indexed: true,
+          internalType: "uint256",
+          name: "tokenId",
+          type: "uint256",
+        },
+      ],
+      name: "Approval",
+      type: "event",
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: "address",
+          name: "owner",
+          type: "address",
+        },
+        {
+          indexed: true,
+          internalType: "address",
+          name: "operator",
+          type: "address",
+        },
+        {
+          indexed: false,
+          internalType: "bool",
+          name: "approved",
+          type: "bool",
+        },
+      ],
+      name: "ApprovalForAll",
+      type: "event",
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: "address",
+          name: "from",
+          type: "address",
+        },
+        {
+          indexed: true,
+          internalType: "address",
+          name: "to",
+          type: "address",
+        },
+        {
+          indexed: true,
+          internalType: "uint256",
+          name: "tokenId",
+          type: "uint256",
+        },
+      ],
+      name: "Transfer",
+      type: "event",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "to", type: "address" },
+        { internalType: "uint256", name: "tokenId", type: "uint256" },
+      ],
+      name: "approve",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "address", name: "owner", type: "address" }],
+      name: "balanceOf",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+      name: "checkId",
+      outputs: [{ internalType: "bool", name: "", type: "bool" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+      name: "getApproved",
+      outputs: [{ internalType: "address", name: "", type: "address" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "owner", type: "address" },
+        { internalType: "address", name: "operator", type: "address" },
+      ],
+      name: "isApprovedForAll",
+      outputs: [{ internalType: "bool", name: "", type: "bool" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "uint256", name: "tokenId", type: "uint256" },
+        { internalType: "string", name: "metadataUrl", type: "string" },
+      ],
+      name: "mint",
+      outputs: [{ internalType: "string", name: "", type: "string" }],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "name",
+      outputs: [{ internalType: "string", name: "", type: "string" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+      name: "ownerOf",
+      outputs: [{ internalType: "address", name: "", type: "address" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "from", type: "address" },
+        { internalType: "address", name: "to", type: "address" },
+        { internalType: "uint256", name: "tokenId", type: "uint256" },
+      ],
+      name: "safeTransferFrom",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "from", type: "address" },
+        { internalType: "address", name: "to", type: "address" },
+        { internalType: "uint256", name: "tokenId", type: "uint256" },
+        { internalType: "bytes", name: "data", type: "bytes" },
+      ],
+      name: "safeTransferFrom",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "operator", type: "address" },
+        { internalType: "bool", name: "approved", type: "bool" },
+      ],
+      name: "setApprovalForAll",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "bytes4", name: "interfaceId", type: "bytes4" }],
+      name: "supportsInterface",
+      outputs: [{ internalType: "bool", name: "", type: "bool" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "symbol",
+      outputs: [{ internalType: "string", name: "", type: "string" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+      name: "tokenURI",
+      outputs: [{ internalType: "string", name: "", type: "string" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "from", type: "address" },
+        { internalType: "address", name: "to", type: "address" },
+        { internalType: "uint256", name: "tokenId", type: "uint256" },
+      ],
+      name: "transferFrom",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+  ],
+};
+
+const API_URL = "http://localhost:5000"; // Adjust according to your backend URL
 
 const Form = () => {
   const [formData, setFormData] = useState({
@@ -25,60 +239,47 @@ const Form = () => {
   const { connectAsync } = useConnect();
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
-  const { chainId } = useChainId();
-  const { switchChain } = useSwitchChain();
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
 
   const [tokenId, setTokenId] = useState(null);
-  const [isChecking, setIsChecking] = useState(true); // Track loading state
-  const metadata = {
-    tokenId,
-    name: formData.name,
-    description: formData.description, // Add this
-    image: formData.image,
-  };
+  const [isChecking, setIsChecking] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-
-  // Generate random ID
-  const generateRandomId = () => Math.floor(Math.random() * 1000000);
+  // Generate random ID between 1 and 1,000,000
+  const generateRandomId = () => Math.floor(Math.random() * 1000000) + 1;
 
   // Check if the token ID exists
   const { data: exists, refetch } = useReadContract({
     ...contractConfig,
     functionName: "checkId",
-    args: [tokenId], // Pass the current tokenId
-    enabled: !!tokenId, // Only run if tokenId is set
+    args: [tokenId],
+    enabled: !!tokenId,
   });
 
+  // Find a unique token ID on initial load
   useEffect(() => {
-    if (isChecking) {
+    if (isChecking && tokenId === null) {
       const newId = generateRandomId();
       setTokenId(newId);
     }
-  }, [isChecking]); // Runs when checking starts
+  }, [isChecking, tokenId]);
 
+  // Check if generated ID exists and generate a new one if needed
   useEffect(() => {
     if (tokenId !== null && exists !== undefined) {
-      if (exists) {
+      if (exists === true) {
         // ID exists, generate a new one
+        console.log(`Token ID ${tokenId} already exists, generating new one...`);
         setTokenId(generateRandomId());
         refetch(); // Re-check the new ID
       } else {
         // Unique ID found
+        console.log(`Found unique token ID: ${tokenId}`);
         setIsChecking(false);
       }
     }
-  }, [tokenId, exists]);
- 
-
-  const switchNetwork = async () => {
-    try {
-      await switchChain({ chainId: sepolia.id });
-      toast("Switched to Sepolia Network!");
-    } catch (error) {
-      console.error("Network switch failed:", error);
-      alert("Failed to switch network. Please switch manually.");
-    }
-  };
+  }, [tokenId, exists, refetch]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -88,252 +289,112 @@ const Form = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (chainId !== sepolia.id) {
-      if (switchNetwork) {
-        switchNetwork();
-     
-      } else {
-        toast("Please switch to the Sepolia network manually.");
-      
-      }
-    }
-    if (!address) {
-      await connectAsync({ chainId: sepolia.id, connector: injected() });
-    }
-    const metadataUrl = `http://localhost:5000/alldata/${tokenId}`;
-    const data = await writeContractAsync({
-      chainId: sepolia.id,
-      address: "0x743f49311a82fe72eb474c44e78da2a6e0ae951c", // Contract Address
-      abi: [
-        { inputs: [], stateMutability: "nonpayable", type: "constructor" },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "owner",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "approved",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "tokenId",
-              type: "uint256",
-            },
-          ],
-          name: "Approval",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "owner",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "operator",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "approved",
-              type: "bool",
-            },
-          ],
-          name: "ApprovalForAll",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "from",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "to",
-              type: "address",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "tokenId",
-              type: "uint256",
-            },
-          ],
-          name: "Transfer",
-          type: "event",
-        },
-        {
-          inputs: [
-            { internalType: "address", name: "to", type: "address" },
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-          ],
-          name: "approve",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [{ internalType: "address", name: "owner", type: "address" }],
-          name: "balanceOf",
-          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-          ],
-          name: "checkId",
-          outputs: [{ internalType: "bool", name: "", type: "bool" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-          ],
-          name: "getApproved",
-          outputs: [{ internalType: "address", name: "", type: "address" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "address", name: "owner", type: "address" },
-            { internalType: "address", name: "operator", type: "address" },
-          ],
-          name: "isApprovedForAll",
-          outputs: [{ internalType: "bool", name: "", type: "bool" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-            { internalType: "string", name: "metadataUrl", type: "string" },
-          ],
-          name: "mint",
-          outputs: [{ internalType: "string", name: "", type: "string" }],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "name",
-          outputs: [{ internalType: "string", name: "", type: "string" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-          ],
-          name: "ownerOf",
-          outputs: [{ internalType: "address", name: "", type: "address" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "address", name: "from", type: "address" },
-            { internalType: "address", name: "to", type: "address" },
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-          ],
-          name: "safeTransferFrom",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "address", name: "from", type: "address" },
-            { internalType: "address", name: "to", type: "address" },
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-            { internalType: "bytes", name: "data", type: "bytes" },
-          ],
-          name: "safeTransferFrom",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "address", name: "operator", type: "address" },
-            { internalType: "bool", name: "approved", type: "bool" },
-          ],
-          name: "setApprovalForAll",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "bytes4", name: "interfaceId", type: "bytes4" },
-          ],
-          name: "supportsInterface",
-          outputs: [{ internalType: "bool", name: "", type: "bool" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "symbol",
-          outputs: [{ internalType: "string", name: "", type: "string" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-          ],
-          name: "tokenURI",
-          outputs: [{ internalType: "string", name: "", type: "string" }],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            { internalType: "address", name: "from", type: "address" },
-            { internalType: "address", name: "to", type: "address" },
-            { internalType: "uint256", name: "tokenId", type: "uint256" },
-          ],
-          name: "transferFrom",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-      ],
-      functionName: "mint", // Use a valid function
-      args: [tokenId, metadataUrl],
-      // sender, receiver, tokenId
-    });
     
-
-    axios
-      .post("http://localhost:5000/alldata", metadata)
-      .then((res) =>
-         console.log(res.data));
-    console.log(data);
-   
+    if (!formData.name) {
+      toast.error("Please enter a name for your NFT");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Step 1: Make sure we're connected
+      if (!address) {
+        try {
+          await connectAsync({
+            connector: injected(),
+          });
+        } catch (error) {
+          toast.error("Failed to connect wallet");
+          console.error("Connection error:", error);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // Step 2: Make sure we're on the right network
+      if (chainId !== sepolia.id) {
+        try {
+          await switchChainAsync({ chainId: sepolia.id });
+          
+          // Wait for chain switch to take effect
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Verify chain switch
+          if (window.ethereum) {
+            const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+            if (parseInt(currentChainId, 16) !== sepolia.id) {
+              throw new Error("Failed to switch to Sepolia network");
+            }
+          }
+          
+          toast.success("Switched to Sepolia Network!");
+        } catch (error) {
+          toast.error("Please switch to Sepolia network manually in your wallet");
+          console.error("Network switch failed:", error);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // Step 3: Prepare metadata
+      const metadata = {
+        tokenId,
+        name: formData.name,
+        description: formData.description || "", 
+        image: formData.image || "",
+        owner: address,
+      };
+      
+      // Step 4: Store metadata in backend
+      try {
+        await axios.post(`${API_URL}/alldata`, metadata);
+        console.log("Metadata stored successfully");
+      } catch (error) {
+        toast.error("Failed to store NFT metadata");
+        console.error("Metadata storage error:", error);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Step 5: Prepare metadata URL for the contract
+      const metadataUrl = `${API_URL}/alldata/${tokenId}`;
+      
+      // Step 6: Call the contract to mint the NFT
+      try {
+        const tx = await writeContractAsync({
+          address: contractConfig.address,
+          abi: contractConfig.abi,
+          functionName: "mint",
+          args: [tokenId, metadataUrl],
+          chainId: sepolia.id,
+        });
+        
+        toast.success("NFT minted successfully!");
+        console.log("Transaction:", tx);
+        
+        // Reset form after successful mint
+        setFormData({
+          name: "",
+          description: "",
+          image: "",
+        });
+        
+        // Generate new token ID for next mint
+        setIsChecking(true);
+        setTokenId(null);
+        
+      } catch (error) {
+        toast.error("Failed to mint NFT");
+        console.error("Mint error:", error);
+      }
+      
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+      console.error("Submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -343,7 +404,7 @@ const Form = () => {
           <div className="card-body w-96">
             <h1 className="text-2xl font-semibold">Mint Your NFT</h1>
             <form onSubmit={handleSubmit}>
-              <fieldset className="fieldset">
+              <fieldset className="fieldset" disabled={isSubmitting || isChecking}>
                 <label className="fieldset-label">NFT Name</label>
                 <input
                   type="text"
@@ -378,15 +439,24 @@ const Form = () => {
                 <button
                   type="submit"
                   className="btn btn-neutral bg-gradient-to-l to-pink-500 from-purple-500 mt-4 flex items-center"
+                  disabled={isSubmitting || isChecking}
                 >
-                  <RiBox2Line className="text-white mr-2" /> Mint NFT
+                  {isSubmitting ? (
+                    <span>Minting...</span>
+                  ) : isChecking ? (
+                    <span>Preparing...</span>
+                  ) : (
+                    <>
+                      <RiBox2Line className="text-white mr-2" /> Mint NFT
+                    </>
+                  )}
                 </button>
               </fieldset>
             </form>
           </div>
         </div>
       </div>
-      <ToastContainer></ToastContainer>
+      <ToastContainer position="bottom-right" />
     </div>
   );
 };
