@@ -1,3 +1,4 @@
+About the nft server:
 1. Add the API routes : [
    GET /POST/: /alldata,
    GET: /alldata/:id
